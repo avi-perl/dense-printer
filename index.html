@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Markdown Page Printer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&family=Amiko:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ Docbar ============ -->
+  <header id="docbar">
+    <div class="doc-icon"></div>
+    <div class="doc-headings">
+      <div id="docTitle">Untitled document</div>
+    </div>
+    <div class="docbar-spacer"></div>
+    <span class="pages-ind" id="pagesInd"></span>
+    <button class="btn print" id="btnPrint">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
+      Print / PDF
+    </button>
+  </header>
+
+  <!-- ============ Toolbar ============ -->
+  <div id="toolbar">
+    <div class="tb-inner">
+      <!-- Open -->
+      <div class="pop-wrap">
+        <button class="tb-btn dd" data-pop="dd-open" title="Open">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+          <span>Open</span>
+          <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="popup" id="dd-open">
+          <button class="menu-item" data-act="files"><span class="chk"></span>Open files…</button>
+          <button class="menu-item" data-act="folder"><span class="chk"></span>Open folder…</button>
+          <button class="menu-item" data-act="paste"><span class="chk"></span>Paste markdown…<span class="mi-r">⌘V</span></button>
+          <button class="menu-item" data-act="sample"><span class="chk"></span>Load sample</button>
+          <div class="menu-sep"></div>
+          <button class="menu-item" data-act="clear"><span class="chk"></span>Clear document</button>
+        </div>
+      </div>
+
+      <div class="tb-sep"></div>
+
+      <!-- Font -->
+      <div class="pop-wrap">
+        <button class="tb-btn dd font" data-pop="dd-font" title="Font">
+          <span class="lab" id="fontLab">Serif</span>
+          <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="popup" id="dd-font">
+          <button class="dd-opt" data-font="serif"><span class="chk">✓</span><span style="font-family:'Source Serif 4',serif">Serif — Source Serif</span></button>
+          <button class="dd-opt" data-font="sans"><span class="chk">✓</span><span style="font-family:Helvetica,Arial,sans-serif">Sans — Helvetica</span></button>
+          <button class="dd-opt" data-font="compact"><span class="chk">✓</span><span style="font-family:'IBM Plex Sans Condensed',sans-serif">Compact — IBM Plex Cond.</span></button>
+          <button class="dd-opt" data-font="micro"><span class="chk">✓</span><span style="font-family:'Amiko',sans-serif">Micro — Amiko, for tiny sizes</span></button>
+        </div>
+      </div>
+
+      <div class="tb-sep"></div>
+
+      <!-- Size stepper -->
+      <div class="stepper" title="Text size (pt)">
+        <button id="sizeMinus" aria-label="Smaller">−</button>
+        <span class="val" id="sizeVal">9</span>
+        <button id="sizePlus" aria-label="Larger">+</button>
+      </div>
+
+      <div class="tb-sep"></div>
+
+      <!-- Line spacing -->
+      <div class="pop-wrap">
+        <button class="tb-btn dd" data-pop="dd-line" title="Line spacing">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 6H8M21 12H8M21 18H8"/><path d="m4 5-2 2 2 2M4 5l2 2-2 2M4 5v14M4 19l-2-2 2-2M4 19l2-2-2-2"/></svg>
+          <span class="lab" id="lineLab">1.2</span>
+          <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="popup" id="dd-line">
+          <button class="dd-opt" data-line="1"><span class="chk">✓</span>1.0 — tightest</button>
+          <button class="dd-opt" data-line="1.1"><span class="chk">✓</span>1.1</button>
+          <button class="dd-opt" data-line="1.2"><span class="chk">✓</span>1.2</button>
+          <button class="dd-opt" data-line="1.35"><span class="chk">✓</span>1.35</button>
+          <button class="dd-opt" data-line="1.5"><span class="chk">✓</span>1.5</button>
+          <button class="dd-opt" data-line="1.8"><span class="chk">✓</span>1.8</button>
+        </div>
+      </div>
+
+      <div class="tb-sep"></div>
+
+      <!-- Columns -->
+      <div class="seg" id="segCols" title="Columns">
+        <button data-v="1">1</button>
+        <button data-v="2" class="on">2</button>
+        <button data-v="3">3</button>
+        <button data-v="4">4</button>
+      </div>
+
+      <div class="tb-sep"></div>
+
+      <!-- Format toggles -->
+      <button class="tb-btn tg on" data-tg="headings" title="Styled headings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 4v16M18 4v16M6 12h12"/></svg>
+        <span>Headings</span>
+      </button>
+      <button class="tb-btn tg" data-tg="justify" title="Justify &amp; hyphenate">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        <span>Justify</span>
+      </button>
+      <button class="tb-btn tg on" data-tg="footer" title="Footer: page № &amp; date">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 16h16"/></svg>
+        <span>Footer</span>
+      </button>
+      <button class="tb-btn tg" data-tg="staple" title="Staple reserve space">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l9 3.5"/><path d="M4 4v9"/><path d="M4 13l5 2"/></svg>
+        <span>Staple</span>
+      </button>
+
+      <div class="tb-sep"></div>
+
+      <!-- Page setup (incl. staple) -->
+      <div class="pop-wrap">
+        <button class="tb-btn dd" data-pop="pop-setup" title="Page setup">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 3v18M16 3v18" stroke-dasharray="2 2"/></svg>
+          <span>Page setup</span>
+          <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="popup right" id="pop-setup">
+          <div class="ps-title">Page setup</div>
+          <div class="ctl">
+            <div class="ctl-row"><span class="ctl-name">Page margins</span><span class="ctl-val" id="vMargin">0.25 in</span></div>
+            <input type="range" id="rMargin" min="0.1" max="1" step="0.05" value="0.25" />
+          </div>
+          <div class="ctl">
+            <div class="ctl-row"><span class="ctl-name">Paragraph spacing</span><span class="ctl-val" id="vPara">0.35 em</span></div>
+            <input type="range" id="rPara" min="0" max="1" step="0.05" value="0.35" />
+          </div>
+          <div class="ctl">
+            <div class="ctl-row"><span class="ctl-name">Squeeze (overall scale)</span><span class="ctl-val" id="vScale">100%</span></div>
+            <input type="range" id="rScale" min="25" max="120" step="1" value="100" />
+          </div>
+          <div class="menu-sep"></div>
+          <div class="ps-toggle tg" data-tg="staple"><span class="ctl-name">Staple reserve space</span><span class="switch"></span></div>
+          <div id="stapleSub">
+            <div class="ps-note">Keeps a clear strip across the top of every sheet so a staple never lands on text.</div>
+            <div class="ctl">
+              <div class="ctl-row"><span class="ctl-name">Reserve height</span><span class="ctl-val" id="vStaple">0.85 in</span></div>
+              <input type="range" id="rStaple" min="0.4" max="1.6" step="0.05" value="0.85" />
+            </div>
+          </div>
+          <div class="menu-sep"></div>
+          <button class="menu-item" data-act="reset" style="justify-content:center; color:var(--muted);"><span class="chk"></span>Reset all to defaults</button>
+        </div>
+      </div>
+
+      <div class="tb-sep"></div>
+
+      <!-- Zoom -->
+      <div class="pop-wrap">
+        <button class="tb-btn dd" data-pop="dd-zoom" title="Zoom">
+          <span class="lab" id="zoomLab">Fit</span>
+          <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="popup right" id="dd-zoom">
+          <button class="dd-opt" data-zoom="fit"><span class="chk">✓</span>Fit page</button>
+          <button class="dd-opt" data-zoom="50"><span class="chk">✓</span>50%</button>
+          <button class="dd-opt" data-zoom="75"><span class="chk">✓</span>75%</button>
+          <button class="dd-opt" data-zoom="100"><span class="chk">✓</span>100%</button>
+          <button class="dd-opt" data-zoom="125"><span class="chk">✓</span>125%</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ Stage ============ -->
+  <div id="stage">
+    <div id="pagesScaler"><div id="pages"></div></div>
+    <div id="empty">
+      <div class="drop" id="drop">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+          <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z" />
+          <path d="M12 18v-6" /><path d="m9 15 3 3 3-3" />
+        </svg>
+        <h2>Drop markdown here</h2>
+        <p>Drag in <strong>.md</strong> files or a whole folder, <strong>paste</strong> markdown, or pick below.<br/>Everything is packed into 8.5×11 pages you can print.</p>
+        <div class="btns">
+          <button class="btn" id="dropFiles">Choose files</button>
+          <button class="btn" id="dropFolder">Choose folder</button>
+          <button class="btn" id="dropPaste">Paste markdown</button>
+          <button class="btn" id="dropSample">Load sample</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept=".md,.markdown,.mdown,.mkd,.txt" multiple class="hidden" />
+<input type="file" id="folderInput" webkitdirectory directory multiple class="hidden" />
+
+<div id="pasteModal" class="hidden">
+  <div class="paste-card">
+    <div class="paste-head">Paste markdown</div>
+    <textarea id="pasteArea" placeholder="Paste your markdown here…"></textarea>
+    <div class="paste-actions">
+      <span class="paste-hint" id="pasteHint"></span>
+      <span style="flex:1"></span>
+      <button class="btn" id="pasteCancel">Cancel</button>
+      <button class="btn print" id="pasteUse">Use markdown</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
