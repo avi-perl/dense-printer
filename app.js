@@ -20,11 +20,44 @@
   let doc = load("mdpp_doc", { markdown: "", names: [] });
   let zoom = load("mdpp_zoom", "fit");
 
+  // ---------- URL API ----------
+  // #md=<base64 markdown>&size=8&cols=3&... lets tools drive the app with a
+  // single link (see llms.txt). Hash-driven sessions never touch localStorage,
+  // so a generated link can't clobber a person's saved document or settings.
+  let hashDriven = false;
+  (function readHash() {
+    if (location.hash.length < 2) return;
+    const p = new URLSearchParams(location.hash.slice(1));
+    const md64 = p.get("md");
+    if (!md64) return;
+    let text;
+    try {
+      const b64 = md64.replace(/-/g, "+").replace(/_/g, "/");
+      const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+      text = new TextDecoder("utf-8").decode(bytes);
+    } catch (e) { return; }
+    if (!text.trim()) return;
+    hashDriven = true;
+    doc = { markdown: text.replace(/\s+$/, ""), names: [p.get("name") || "Linked.md"] };
+    if (FONTS[p.get("font")]) settings.font = p.get("font");
+    [["size", 3, 24], ["line", 1, 1.8], ["margin", 0.1, 1], ["para", 0, 1], ["scale", 25, 120], ["stapleSize", 0.4, 1.6]].forEach(([k, lo, hi]) => {
+      const v = parseFloat(p.get(k));
+      if (!isNaN(v)) settings[k] = Math.min(hi, Math.max(lo, v));
+    });
+    const c = parseInt(p.get("cols"), 10);
+    if (c >= 1 && c <= 4) settings.cols = c;
+    ["headings", "justify", "footer", "staple"].forEach((k) => {
+      const v = p.get(k);
+      if (v != null) settings[k] = v === "1" || v === "true";
+    });
+  })();
+
   const $ = (id) => document.getElementById(id);
   const pagesEl = $("pages"), scalerEl = $("pagesScaler"), stageEl = $("stage"), emptyEl = $("empty");
 
   function load(k, fb) { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? fb : v; } catch (e) { return fb; } }
   function save() {
+    if (hashDriven) return;
     try {
       localStorage.setItem("mdpp_settings", JSON.stringify(settings));
       localStorage.setItem("mdpp_doc", JSON.stringify(doc));

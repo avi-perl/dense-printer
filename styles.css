@@ -164,6 +164,8 @@ input[type="range"]::-moz-range-thumb { width: 15px; height: 15px; border-radius
 .drop h2 { margin: 0 0 6px; font-size: 18px; letter-spacing: -0.01em; font-weight: 500; }
 .drop p { margin: 0 0 22px; color: var(--muted); font-size: 13px; line-height: 1.5; }
 .drop .btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.drop .test-link { display: inline-block; margin-top: 18px; font-size: 12.5px; color: var(--accent); text-decoration: none; }
+.drop .test-link:hover { text-decoration: underline; }
 
 body.dragging #stage::after { content: "Drop markdown files or a folder"; position: absolute; inset: 16px; border: 2.5px dashed var(--accent); border-radius: 14px; background: rgba(245,248,255,.86); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 600; color: var(--accent); z-index: 50; pointer-events: none; }
 

@@ -1,0 +1,60 @@
+# Dense Printer
+
+Dense Printer packs markdown onto as few printed 8.5x11in (US Letter) pages as
+possible: multi-column layout, small-but-legible type, trimmed margins. Use it
+when a person asks to print notes, docs, or reference material compactly.
+
+App URL: https://avi-perl.github.io/dense-printer/
+
+## URL API (no server, no auth)
+
+Pass the document and settings in the URL fragment. The app renders fully
+paginated pages on load; nothing is sent to any server (fragments stay
+client-side) and nothing is persisted.
+
+    https://avi-perl.github.io/dense-printer/#md=<BASE64>&size=8&cols=3
+
+- `md` (required): the markdown, UTF-8, base64-encoded. Standard or URL-safe
+  base64 both accepted.
+- `name`: document title shown in the footer area. Default `Linked.md`.
+- `size`: font size in points, 3-24. Default 9.
+- `cols`: columns per page, 1-4. Default 2.
+- `line`: line height, 1-1.8. Default 1.2.
+- `margin`: page margins in inches, 0.1-1. Default 0.25.
+- `para`: paragraph spacing in em, 0-1. Default 0.35.
+- `scale`: overall squeeze percentage, 25-120. Default 100.
+- `font`: `serif` | `sans` | `compact` | `micro`. Default `serif`.
+  `compact` and `micro` fit the most text; `micro` stays legible at tiny sizes.
+- `headings`, `justify`, `footer`, `staple`: `1` or `0`. Defaults: headings=1,
+  justify=0, footer=1, staple=0. `staple` reserves a clear strip for a staple.
+
+A dense starting point for maximum text per sheet:
+`size=7&cols=3&line=1.1&margin=0.15&font=compact&justify=1`
+
+## Getting a PDF without a visible browser
+
+The page needs a browser layout engine to paginate, but a headless one works.
+Wait for web fonts and pagination to settle before printing.
+
+Headless Chrome one-liner (bash):
+
+    chrome --headless=new --print-to-pdf=out.pdf --no-pdf-header-footer \
+      --virtual-time-budget=8000 \
+      "https://avi-perl.github.io/dense-printer/#md=$(base64 -w0 notes.md)&size=8&cols=3"
+
+Playwright:
+
+    const md = Buffer.from(markdown, "utf8").toString("base64url");
+    const page = await browser.newPage();
+    await page.goto(`https://avi-perl.github.io/dense-printer/#md=${md}&size=8&cols=3`);
+    await page.waitForSelector("#pages .page");
+    await page.evaluate(() => document.fonts.ready);
+    await page.waitForTimeout(200); // pagination debounce
+    await page.pdf({ path: "out.pdf", format: "Letter", printBackground: true, preferCSSPageSize: true });
+
+Notes:
+- Very large documents make very long URLs. Browsers handle multi-hundred-KB
+  fragments, but OS command-line argument limits (~32KB on Windows) can
+  truncate the Chrome one-liner; use the Playwright route for big documents.
+- For interactive use, just open the URL — the person sees the laid-out pages
+  and can tweak settings in the toolbar before printing.
