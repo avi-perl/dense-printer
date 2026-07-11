@@ -32,7 +32,9 @@
     if (!md64) return;
     let text;
     try {
-      const b64 = md64.replace(/-/g, "+").replace(/_/g, "/");
+      // URLSearchParams decodes "+" as a space; spaces are invalid in base64,
+      // so any space here was a "+" in standard base64. Also accept base64url.
+      const b64 = md64.replace(/ /g, "+").replace(/-/g, "+").replace(/_/g, "/");
       const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
       text = new TextDecoder("utf-8").decode(bytes);
     } catch (e) { return; }
