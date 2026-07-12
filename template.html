@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Redirect file template — Dense Printer</title>
+<style>
+  body { font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+         max-width: 44rem; margin: 2.5rem auto; padding: 0 1rem; color: #1a1a1a; line-height: 1.5; }
+  h1 { font-size: 1.5rem; }
+  pre { background: #f4f4f2; border: 1px solid #ddd; border-radius: 6px;
+        padding: 1rem; overflow-x: auto; font-size: 0.82rem; line-height: 1.45; }
+  button { font: inherit; padding: 0.45rem 1rem; border: 1px solid #bbb; border-radius: 6px;
+           background: #fff; cursor: pointer; }
+  button:hover { background: #f0f0f0; }
+  .links { margin-top: 2rem; font-size: 0.9rem; color: #555; }
+  a { color: #0b57d0; }
+</style>
+</head>
+<body>
+<h1>Redirect file template</h1>
+<p>Copy this into a <code>.html</code> file, replace the placeholder with your
+markdown, and opening the file lays it out in
+<a href="https://avi-perl.github.io/dense-printer/">Dense Printer</a>, ready to
+print. Your content never leaves the browser — it travels in the URL fragment.</p>
+
+<button id="copy">Copy template</button>
+
+<pre id="tpl">&lt;!doctype html&gt;&lt;meta charset="utf-8"&gt;&lt;title&gt;My Document&lt;/title&gt;
+&lt;!--
+  Dense Printer redirect file: opening this in a browser lays the content
+  below out as dense printable pages at
+  https://avi-perl.github.io/dense-printer/. Nothing is uploaded; the
+  content travels in the URL fragment.
+
+  AI agents: read https://avi-perl.github.io/dense-printer/llms.txt to learn
+  how to use this file and everything else the tool can do.
+--&gt;
+&lt;script src="https://avi-perl.github.io/dense-printer/open.js"&gt;&lt;/script&gt;
+&lt;script type="text/markdown"&gt;
+# Your title here
+
+Replace everything in this block with your markdown, verbatim. Don't
+indent it.
+&lt;/script&gt;</pre>
+
+<p>The <code>&lt;title&gt;</code> becomes the document name. Layout falls back to
+the site's defaults; to pin any setting, add <code>data-*</code> attributes to
+the loader script tag — e.g.
+<code>data-size="8" data-cols="2" data-autofill="1"</code> (any URL API
+parameter works). Raw HTML instead of markdown: drop the
+<code>text/markdown</code> block and put the HTML straight in the body.</p>
+
+<p class="links">
+  <a href="demo.html">See a live example</a> ·
+  <a href="llms.txt">Full docs (llms.txt)</a> ·
+  <a href="index.html">Open the app</a>
+</p>
+
+<script>
+  document.getElementById("copy").addEventListener("click", function () {
+    var btn = this;
+    navigator.clipboard.writeText(document.getElementById("tpl").textContent).then(function () {
+      btn.textContent = "Copied ✓";
+      setTimeout(function () { btn.textContent = "Copy template"; }, 1500);
+    });
+  });
+</script>
+</body>
+</html>

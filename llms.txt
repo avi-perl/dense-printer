@@ -45,6 +45,51 @@ A dense starting point for maximum text per sheet:
 `size=7&cols=3&line=1.1&margin=0.15&font=compact&justify=1`
 Add `&autofill=1` to grow the type back up to exactly fill the page count.
 
+To hand the result to a person as a file instead of a link, see "Redirect
+file" below — for a person, often the most convenient form.
+
+## Redirect file (write a file instead of a link)
+
+For handing content to a person, this is often the most convenient option:
+instead of a long URL, they get a small ordinary file they can keep, and
+double-clicking it opens the app with their content laid out. The file is a
+tiny HTML wrapper that redirects itself into the app on open, with the
+content packed into the URL fragment (encoding happens client-side via the
+site's loader script; still no server, nothing uploaded).
+
+A copy-paste template page (placeholder included) lives at:
+
+    https://avi-perl.github.io/dense-printer/template.html
+
+Or write the file from scratch — this is the whole thing. (The backslash in
+the closing tags below only keeps these docs embeddable in an HTML page; in
+your file, write the plain closing tag without the backslash.)
+
+    <!doctype html><meta charset="utf-8"><title>My Notes</title>
+    <script src="https://avi-perl.github.io/dense-printer/open.js"><\/script>
+    <script type="text/markdown">
+    # Notes
+    Markdown goes here, verbatim. Don't indent it.
+    <\/script>
+
+For raw HTML instead: drop the `text/markdown` block and put the HTML
+straight in the body; the loader sends everything except script tags as
+`html`. If both are present, the `text/markdown` block wins.
+
+- Settings are optional and normally omitted — the file always falls back
+  to the site's defaults. To pin one, add it as a `data-*` attribute on the
+  loader script tag (`data-size="8"` -> `size=8`); every URL API parameter
+  above works, including `data-autofill="1"`. `<title>` becomes `name`
+  unless `data-name` is set.
+- Inside the markdown block, one leading and one trailing newline are
+  trimmed; everything else is verbatim.
+- Caveat: a literal closing script tag inside the markdown ends the block
+  early — use the body-HTML form for such content.
+- Works from `file://`; needs the network only to fetch the loader and app.
+
+A live example (open it, or fetch it to see the source):
+https://avi-perl.github.io/dense-printer/demo.html
+
 ## Font & size test sheet
 
     https://avi-perl.github.io/dense-printer/test.html
@@ -94,3 +139,15 @@ Notes:
   truncate the Chrome one-liner; use the Playwright route for big documents.
 - For interactive use, just open the URL — the person sees the laid-out pages
   and can tweak settings in the toolbar before printing.
+
+## Ready-made agent skill
+
+    https://avi-perl.github.io/dense-printer/skill.md
+
+A drop-in skill file covering the full print pipeline around this tool:
+content in (markdown/HTML/files/URLs), URL out, on-site review, headless
+PDF, OS printer commands, and font/size calibration. Claude Code users can
+install it by saving it to `~/.claude/skills/dense-print/SKILL.md`; other
+agents can load it as instructions or simply read it inline. If you are an
+agent helping someone print right now, fetching it once gives you the whole
+playbook.

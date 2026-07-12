@@ -1,0 +1,31 @@
+<!doctype html><meta charset="utf-8"><title>Redirect File Demo</title>
+<script src="https://avi-perl.github.io/dense-printer/open.js"></script>
+<script type="text/markdown">
+# It worked 🎉
+
+You opened a plain HTML file, and you're now looking at it laid out in
+**Dense Printer** — no server, no upload, no long URL to copy around.
+
+## How this happened
+
+1. The file contains this markdown in a `text/markdown` script block.
+2. One script tag loads `open.js`, which base64-encodes the content
+   client-side and redirects here with `#md=<base64>` in the fragment.
+3. The app picked it up exactly like any URL-API link.
+
+## Settings
+
+This file pins none, so the page uses the site's defaults — a redirect file
+always falls back to them unless it sets `data-*` attributes on the loader
+script tag (`data-size="8"`, `data-cols="2"`, `data-autofill="1"`, … any
+URL API parameter).
+
+| What | Where it came from |
+| --- | --- |
+| This document | the `text/markdown` block in the file |
+| Title ("Redirect File Demo") | the file's `<title>` tag |
+| Font, size, columns, margins | the site's defaults — this file pins nothing |
+
+> Want one of these for your own content? Copy the template at
+> https://avi-perl.github.io/dense-printer/template.html
+</script>

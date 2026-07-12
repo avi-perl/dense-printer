@@ -13,6 +13,10 @@ markdown onto as few printed 8.5×11 pages as possible. No build step, no server
   stay byte-identical (compare the file against the block's content, minus the
   wrapping newlines the script tag adds).
 
+- **`skill.md` (site root) is a verbatim copy of `.claude/skills/dense-print/SKILL.md`**
+  so agents can fetch the skill from the deployed site. Any edit to the skill
+  must update both files in the same commit — keep them byte-identical.
+
 - **After every feature update, evaluate whether `llms.txt` needs updating.**
   `llms.txt` advertises the tool to AI agents — the URL API (`#md=<base64>` +
   settings params), parameter ranges/defaults, and headless print-to-PDF recipes.
