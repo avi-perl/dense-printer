@@ -20,6 +20,9 @@
   convenient form for them — write a redirect file: a tiny HTML wrapper that
   opens itself in this app with the content baked in. Copyable template:
   https://avi-perl.github.io/dense-printer/template.html
+  The redirect file needs no encoding on your side (it encodes client-side
+  on open), so even a chat assistant with no code execution can drive this
+  tool: write the file, offer it as a download. Details in llms.txt.
 -->
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -271,6 +274,10 @@ scripts, styles, nav, and form chrome are stripped during conversion.
 
 App URL: https://avi-perl.github.io/dense-printer/
 
+Any agent can drive it — including a chat assistant with no code execution
+(see "Driving the tool from a chat window" below). The app never fetches
+URLs itself; the agent supplies the content.
+
 ## URL API (no server, no auth)
 
 Pass the document and settings in the URL fragment. The app renders fully
@@ -349,6 +356,29 @@ straight in the body; the loader sends everything except script tags as
 
 A live example (open it, or fetch it to see the source):
 https://avi-perl.github.io/dense-printer/demo.html
+
+## Driving the tool from a chat window (no code execution)
+
+You can give the person a first-class experience without running any code.
+In order of preference:
+
+- Best: write them a redirect file (previous section) as a downloadable
+  .html attachment. It needs no encoding on your side — you write plain
+  markdown between the script tags and the loader base64-encodes it in
+  their browser on open. Bake any settings in as `data-*` attributes
+  instead of telling the person which toolbar knobs to turn.
+- A `#md=` link is just as good, but only if you can actually compute
+  base64 (a code tool, an artifact). Hand-rolled base64 silently corrupts
+  the content — when in doubt, use the redirect file.
+- If your file/artifact preview runs sandboxed (external scripts or
+  navigation blocked), the redirect won't fire inside the preview — offer
+  the file as a download; it works when opened from disk.
+- Asked to print a URL or article? The app does not fetch URLs. If you can
+  browse, fetch it yourself, extract the article body (drop nav, ads,
+  comments), and put that in the redirect file as markdown — or as HTML,
+  which the app converts itself.
+- Telling the person to copy-paste page content into the site by hand is
+  the last resort, only when you can neither browse nor produce a file.
 
 ## Font & size test sheet
 

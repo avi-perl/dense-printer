@@ -63,7 +63,9 @@ is one loader script tag plus the content:
 in the body.) The `<title>` becomes the document name. Layout always falls
 back to the site's defaults; pin a setting only when wanted, via `data-*`
 attributes on the loader tag (`data-size="8"`, `data-autofill="1"`, any URL
-API param). Copyable template with placeholder:
+API param). The file needs no encoding on your side — the loader
+base64-encodes client-side on open — so this route works even with no shell
+at all: write the file, hand it over. Copyable template with placeholder:
 https://avi-perl.github.io/dense-printer/template.html — full rules in
 llms.txt.
 
