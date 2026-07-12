@@ -394,6 +394,7 @@
     } else {
       $("docTitle").textContent = "Untitled document";
     }
+    $("btnShare").disabled = !doc.markdown.trim();
   }
   $("fileInput").addEventListener("change", (e) => ingest(Array.from(e.target.files)));
   $("folderInput").addEventListener("change", (e) => ingest(Array.from(e.target.files)));
@@ -475,6 +476,61 @@
     const text = dt.getData("text");
     if (text && text.trim()) { e.preventDefault(); ingestText(text, "Pasted.md"); }
   });
+
+  // ---------- Share ----------
+  // Packages the current document as a redirect file (see template.html):
+  // a small self-contained .html that opens itself in this app with the
+  // content and any non-default settings baked in. Shared through the OS
+  // share sheet where the Web Share API supports files; downloaded otherwise.
+  const SITE = "https://avi-perl.github.io/dense-printer/";
+  function b64url(str) {
+    const bytes = new TextEncoder().encode(str);
+    let bin = "";
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  function shareParams() {
+    const out = [];
+    if (settings.font !== DEFAULTS.font) out.push(["font", settings.font]);
+    ["size", "line", "margin", "para", "scale", "cols", "stapleSize"].forEach((k) => { if (settings[k] !== DEFAULTS[k]) out.push([k, String(settings[k])]); });
+    ["headings", "justify", "footer", "staple"].forEach((k) => { if (settings[k] !== DEFAULTS[k]) out.push([k, settings[k] ? "1" : "0"]); });
+    return out;
+  }
+  function buildShareHtml(name) {
+    const esc = name.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const comment = "<!--\n  Dense Printer document: opening this file in a browser lays the content\n  out as dense printable pages at " + SITE + ".\n  Nothing is uploaded; the content travels in the URL fragment.\n\n  AI agents: read " + SITE + "llms.txt to learn how to use this file and\n  everything else the tool can do.\n-->";
+    const md = doc.markdown;
+    if (!/<\/script/i.test(md)) {
+      const attrs = shareParams().map(([k, v]) => " data-" + k.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase()) + '="' + v + '"').join("");
+      return '<!doctype html><meta charset="utf-8"><title>' + esc + "</title>\n" + comment + "\n" +
+        '<script src="' + SITE + 'open.js"' + attrs + "></script>\n" +
+        '<script type="text/markdown">\n' + md + "\n</script>\n";
+    }
+    // Content contains a closing script tag, which would end the markdown
+    // block early — bake the encoded app link instead of readable markdown.
+    const params = new URLSearchParams();
+    params.set("md", b64url(md));
+    params.set("name", name);
+    shareParams().forEach(([k, v]) => params.set(k, v));
+    return '<!doctype html><meta charset="utf-8"><title>' + esc + "</title>\n" + comment + "\n" +
+      "<script>location.replace(" + JSON.stringify(SITE + "#" + params.toString()) + ")</script>\n";
+  }
+  async function shareDoc() {
+    if (!doc.markdown.trim()) return;
+    const name = ($("docTitle").textContent || "Document").replace(/[\\/:*?"<>|]/g, "-").trim() || "Document";
+    const html = buildShareHtml(name);
+    const file = new File([html], name + ".html", { type: "text/html" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], title: name }); return; }
+      catch (e) { if (e && e.name === "AbortError") return; /* cancelled — don't also download */ }
+    }
+    const url = URL.createObjectURL(file);
+    const a = document.createElement("a");
+    a.href = url; a.download = file.name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+  $("btnShare").addEventListener("click", shareDoc);
 
   // ---------- Drag & drop ----------
   function readEntries(reader) {
