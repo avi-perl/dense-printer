@@ -195,9 +195,14 @@ body.dragging #stage::after { content: "Drop markdown or HTML files, or a folder
   #docbar { padding: 8px 10px 5px; gap: 10px; }
   #docTitle { font-size: 16px; }
   .pages-ind { display: none; }
-  .tools-toggle { display: inline-flex; padding: 7px 10px; }
+  /* Docbar order: Tools first, then a lighter paste button; Share stays left of Print */
+  .tools-toggle { display: inline-flex; padding: 7px 10px; order: -2; }
+  .paste-sq { order: -1; width: auto; height: auto; padding: 7px 10px; background: #fff; border: 1px solid var(--line); box-shadow: none; color: var(--accent); }
+  .paste-sq:hover { filter: none; background: #f6f7f9; }
+  .paste-sq span { display: none; }
   #btnShare { padding: 7px 10px; }
   #btnShare span { display: none; }
+  #btnPrint .pdf-suffix { display: none; }
 
   /* the toolbar itself becomes a kick-out drawer from the left */
   #toolbar { position: fixed; top: 0; left: 0; bottom: 0; z-index: 150; width: min(320px, 86vw); padding: 0; background: #fff; box-shadow: 4px 0 24px rgba(0,0,0,.18); transform: translateX(-102%); transition: transform .22s ease; display: flex; flex-direction: column; }
