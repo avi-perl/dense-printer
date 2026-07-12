@@ -73,7 +73,7 @@
         <div class="popup" id="dd-open">
           <button class="menu-item" data-act="files"><span class="chk"></span>Open files…</button>
           <button class="menu-item" data-act="folder"><span class="chk"></span>Open folder…</button>
-          <button class="menu-item" data-act="paste"><span class="chk"></span>Paste markdown…<span class="mi-r">⌘V</span></button>
+          <button class="menu-item" data-act="paste"><span class="chk"></span>Paste content…<span class="mi-r">⌘V</span></button>
           <button class="menu-item" data-act="sample"><span class="chk"></span>Load sample</button>
           <a class="menu-item" href="test.html"><span class="chk"></span>Font &amp; size test sheet</a>
           <div class="menu-sep"></div>
@@ -233,7 +233,7 @@
         <div class="btns">
           <button class="btn" id="dropFiles">Choose files</button>
           <button class="btn" id="dropFolder">Choose folder</button>
-          <button class="btn" id="dropPaste">Paste markdown</button>
+          <button class="btn" id="dropPaste">Paste content</button>
           <button class="btn" id="dropSample">Load sample</button>
         </div>
         <a class="test-link" href="test.html">Not sure which font &amp; size? Print the test sheet &rarr;</a>
@@ -247,13 +247,13 @@
 
 <div id="pasteModal" class="hidden">
   <div class="paste-card">
-    <div class="paste-head">Paste markdown or HTML</div>
-    <textarea id="pasteArea" placeholder="Paste your markdown or HTML here…"></textarea>
+    <div class="paste-head">Paste content</div>
+    <textarea id="pasteArea" placeholder="Paste markdown, HTML, or rich text copied from any page or app…"></textarea>
     <div class="paste-actions">
       <span class="paste-hint" id="pasteHint"></span>
       <span style="flex:1"></span>
       <button class="btn" id="pasteCancel">Cancel</button>
-      <button class="btn print" id="pasteUse">Use markdown</button>
+      <button class="btn print" id="pasteUse">Use content</button>
     </div>
   </div>
 </div>

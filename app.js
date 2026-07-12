@@ -402,7 +402,7 @@
   $("dropSample").onclick = () => loadSample();
   function loadSample() { doc = { markdown: SAMPLE, names: ["Field Notes.md"] }; save(); refreshSource(); repaginate(); }
 
-  // ---------- Paste markdown ----------
+  // ---------- Paste content ----------
   function ingestText(text, name) {
     if (!text || !text.trim()) return;
     if (looksLikeHtml(text)) text = htmlToMarkdown(text);
@@ -411,6 +411,7 @@
     save(); refreshSource(); repaginate();
   }
   function openPaste() {
+    setTools(false); // mobile: land on the page view when the modal closes, not the drawer
     closeAllPops();
     $("pasteArea").value = doc.markdown && doc.names[0] === "Pasted.md" ? doc.markdown : "";
     $("pasteHint").textContent = "";
@@ -420,7 +421,7 @@
   function closePaste() { $("pasteModal").classList.add("hidden"); }
   function confirmPaste() {
     const text = $("pasteArea").value;
-    if (!text.trim()) { $("pasteHint").textContent = "Nothing to add — paste some markdown or HTML first."; return; }
+    if (!text.trim()) { $("pasteHint").textContent = "Nothing to add — paste some markdown, HTML, or rich text first."; return; }
     ingestText(text, "Pasted.md");
     closePaste();
   }
