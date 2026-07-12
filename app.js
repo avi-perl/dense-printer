@@ -425,6 +425,30 @@
     ingestText(text, "Pasted.md");
     closePaste();
   }
+  // One-click paste from the docbar: read the clipboard directly, preferring
+  // the HTML flavor (converted to markdown) unless the plain text already
+  // reads as markdown. Browsers without clipboard read access — or a denied
+  // permission prompt — land in the paste modal instead.
+  async function pasteFromClipboard() {
+    try {
+      let text = "", html = "";
+      if (navigator.clipboard && navigator.clipboard.read) {
+        for (const item of await navigator.clipboard.read()) {
+          if (!text && item.types.includes("text/plain")) text = await (await item.getType("text/plain")).text();
+          if (!html && item.types.includes("text/html")) html = await (await item.getType("text/html")).text();
+        }
+      } else if (navigator.clipboard && navigator.clipboard.readText) {
+        text = await navigator.clipboard.readText();
+      } else { openPaste(); return; }
+      if (html && !(text.trim() && looksLikeMarkdown(text))) {
+        const md = htmlToMarkdown(html);
+        if (md) { ingestText(md, "Pasted.md"); return; }
+      }
+      if (text.trim()) { ingestText(text, "Pasted.md"); return; }
+      openPaste();
+    } catch (e) { openPaste(); }
+  }
+  $("btnPasteTop").addEventListener("click", pasteFromClipboard);
   $("dropPaste").onclick = openPaste;
   $("pasteCancel").addEventListener("click", closePaste);
   $("pasteUse").addEventListener("click", confirmPaste);
