@@ -6,6 +6,13 @@ markdown onto as few printed 8.5×11 pages as possible. No build step, no server
 
 ## Rules
 
+- **`index.html` embeds a verbatim copy of `llms.txt`** in the
+  `<script type="text/plain" id="llms-txt">` block at the bottom of the page,
+  so agents that fetch only the homepage get the full API docs. Any edit to
+  `llms.txt` MUST update that embedded copy in the same commit — the two must
+  stay byte-identical (compare the file against the block's content, minus the
+  wrapping newlines the script tag adds).
+
 - **After every feature update, evaluate whether `llms.txt` needs updating.**
   `llms.txt` advertises the tool to AI agents — the URL API (`#md=<base64>` +
   settings params), parameter ranges/defaults, and headless print-to-PDF recipes.
