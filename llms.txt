@@ -4,6 +4,11 @@ Dense Printer packs markdown onto as few printed 8.5x11in (US Letter) pages as
 possible: multi-column layout, small-but-legible type, trimmed margins. Use it
 when a person asks to print notes, docs, or reference material compactly.
 
+HTML works too: pass it via the `html` URL parameter (below), open/drop .html
+files, paste rich text or raw HTML source, or drag a browser selection. All of
+it is converted to markdown client-side (Turndown + GFM tables) before layout;
+scripts, styles, nav, and form chrome are stripped during conversion.
+
 App URL: https://avi-perl.github.io/dense-printer/
 
 ## URL API (no server, no auth)
@@ -14,8 +19,11 @@ client-side) and nothing is persisted.
 
     https://avi-perl.github.io/dense-printer/#md=<BASE64>&size=8&cols=3
 
-- `md` (required): the markdown, UTF-8, base64-encoded. Standard or URL-safe
-  base64 both accepted.
+- `md`: the markdown, UTF-8, base64-encoded. Standard or URL-safe base64 both
+  accepted. Provide `md` or `html` (one is required); `md` wins if both.
+- `html`: HTML instead of markdown, UTF-8, base64-encoded (same base64 rules).
+  Converted to markdown client-side on load — useful when you have a web page
+  or HTML fragment and don't want to convert it yourself.
 - `name`: document title shown in the footer area. Default `Linked.md`.
 - `size`: font size in points, 3-24. Default 9.
 - `cols`: columns per page, 1-4. Default 2.

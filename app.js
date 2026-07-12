@@ -20,24 +20,66 @@
   let doc = load("mdpp_doc", { markdown: "", names: [] });
   let zoom = load("mdpp_zoom", "fit");
 
+  // ---------- HTML import ----------
+  // Declared before the URL API so #html= links can convert during initial
+  // load (the Turndown script tags precede app.js, so the globals exist).
+  const HTML_RE = /\.(html?|xhtml)$/i;
+  const HTML_STRIP = "script,style,noscript,template,iframe,object,embed,canvas,form,button,input,select,textarea,nav,aside";
+  function htmlToMarkdown(html) {
+    let body;
+    try { body = new DOMParser().parseFromString(html, "text/html").body; }
+    catch (e) { return ""; }
+    body.querySelectorAll(HTML_STRIP).forEach((el) => el.remove());
+    if (!window.TurndownService) return body.textContent.trim(); // CDN blocked — degrade to plain text
+    try {
+      const td = new TurndownService({ headingStyle: "atx", codeBlockStyle: "fenced", bulletListMarker: "-", hr: "---" });
+      if (window.turndownPluginGfm) td.use(turndownPluginGfm.gfm);
+      return td.turndown(body).trim();
+    } catch (e) { return body.textContent.trim(); }
+  }
+  // Copying markdown out of an editor also puts a styled-HTML flavor on the
+  // clipboard; when the plain text already reads as markdown, keep it verbatim.
+  function looksLikeMarkdown(text) {
+    return /^#{1,6}\s|^```|^[-*+]\s|^\s*\d+\.\s|^>\s|\[[^\]]+\]\([^)]+\)|\*\*[^*\n]+\*\*|^\|.+\|/m.test(text);
+  }
+  // Raw HTML source pasted as plain text: a whole document, or a fragment that
+  // opens with a tag and closes one (and doesn't read as markdown).
+  function looksLikeHtml(text) {
+    const t = text.trim();
+    if (/^<!doctype html/i.test(t) || /^<html[\s>]/i.test(t)) return true;
+    return /^<([a-z][a-z0-9-]*)(\s[^>]*)?>/i.test(t) && /<\/[a-z][a-z0-9-]*>/i.test(t) && !looksLikeMarkdown(t);
+  }
+  function htmlFlavorToMarkdown(dt) {
+    if (!dt || !dt.getData) return "";
+    let html;
+    try { html = dt.getData("text/html"); } catch (e) { return ""; }
+    if (!html || !html.trim()) return "";
+    const text = dt.getData("text/plain") || "";
+    if (text.trim() && looksLikeMarkdown(text)) return "";
+    return htmlToMarkdown(html);
+  }
+
   // ---------- URL API ----------
-  // #md=<base64 markdown>&size=8&cols=3&... lets tools drive the app with a
-  // single link (see llms.txt). Hash-driven sessions never touch localStorage,
-  // so a generated link can't clobber a person's saved document or settings.
+  // #md=<base64 markdown> or #html=<base64 html>, plus &size=8&cols=3&...,
+  // lets tools drive the app with a single link (see llms.txt). HTML is
+  // converted to markdown on load. Hash-driven sessions never touch
+  // localStorage, so a generated link can't clobber a person's saved
+  // document or settings.
   let hashDriven = false;
   (function readHash() {
     if (location.hash.length < 2) return;
     const p = new URLSearchParams(location.hash.slice(1));
-    const md64 = p.get("md");
-    if (!md64) return;
+    const md64 = p.get("md"), html64 = p.get("html");
+    if (!md64 && !html64) return;
     let text;
     try {
       // URLSearchParams decodes "+" as a space; spaces are invalid in base64,
       // so any space here was a "+" in standard base64. Also accept base64url.
-      const b64 = md64.replace(/ /g, "+").replace(/-/g, "+").replace(/_/g, "/");
+      const b64 = (md64 || html64).replace(/ /g, "+").replace(/-/g, "+").replace(/_/g, "/");
       const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
       text = new TextDecoder("utf-8").decode(bytes);
     } catch (e) { return; }
+    if (!md64) text = htmlToMarkdown(text);
     if (!text.trim()) return;
     hashDriven = true;
     doc = { markdown: text.replace(/\s+$/, ""), names: [p.get("name") || "Linked.md"] };
@@ -271,17 +313,20 @@
   const MD_RE = /\.(md|markdown|mdown|mkd|txt)$/i;
   function natCompare(a, b) { return a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }); }
   async function ingest(files) {
-    const md = files.filter((f) => MD_RE.test(f.name));
+    const md = files.filter((f) => MD_RE.test(f.name) || HTML_RE.test(f.name));
     if (!md.length) return;
     md.sort((a, b) => natCompare(a._path || a.webkitRelativePath || a.name, b._path || b.webkitRelativePath || b.name));
     const parts = [];
-    for (const f of md) parts.push((await f.text()).replace(/\s+$/, ""));
+    for (const f of md) {
+      const raw = (await f.text()).replace(/\s+$/, "");
+      parts.push(HTML_RE.test(f.name) ? htmlToMarkdown(raw) : raw);
+    }
     doc = { markdown: parts.join("\n\n"), names: md.map((f) => f.name) };
     save(); refreshSource(); repaginate();
   }
   function refreshSource() {
     if (doc.names.length) {
-      $("docTitle").textContent = doc.names.length === 1 ? doc.names[0].replace(MD_RE, "") : doc.names.length + " documents";
+      $("docTitle").textContent = doc.names.length === 1 ? doc.names[0].replace(MD_RE, "").replace(HTML_RE, "") : doc.names.length + " documents";
     } else {
       $("docTitle").textContent = "Untitled document";
     }
@@ -296,6 +341,8 @@
   // ---------- Paste markdown ----------
   function ingestText(text, name) {
     if (!text || !text.trim()) return;
+    if (looksLikeHtml(text)) text = htmlToMarkdown(text);
+    if (!text.trim()) return;
     doc = { markdown: text.replace(/\s+$/, ""), names: [name || "Pasted.md"] };
     save(); refreshSource(); repaginate();
   }
@@ -309,7 +356,7 @@
   function closePaste() { $("pasteModal").classList.add("hidden"); }
   function confirmPaste() {
     const text = $("pasteArea").value;
-    if (!text.trim()) { $("pasteHint").textContent = "Nothing to add — paste some markdown first."; return; }
+    if (!text.trim()) { $("pasteHint").textContent = "Nothing to add — paste some markdown or HTML first."; return; }
     ingestText(text, "Pasted.md");
     closePaste();
   }
@@ -321,11 +368,22 @@
     if (e.key === "Escape") closePaste();
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") confirmPaste();
   });
-  // Global paste: drop clipboard markdown straight onto the page (unless typing in a field)
+  // Rich text / HTML pasted into the modal lands as markdown
+  $("pasteArea").addEventListener("paste", (e) => {
+    const md = htmlFlavorToMarkdown(e.clipboardData);
+    if (!md) return;
+    e.preventDefault();
+    const ta = e.target;
+    ta.setRangeText(md, ta.selectionStart, ta.selectionEnd, "end");
+  });
+  // Global paste: drop clipboard markdown — or rich text, converted — straight onto the page (unless typing in a field)
   document.addEventListener("paste", (e) => {
     const t = e.target;
     if (t && (t.tagName === "TEXTAREA" || t.tagName === "INPUT" || t.isContentEditable)) return;
-    const text = (e.clipboardData || window.clipboardData).getData("text");
+    const dt = e.clipboardData || window.clipboardData;
+    const md = htmlFlavorToMarkdown(dt);
+    if (md) { e.preventDefault(); ingestText(md, "Pasted.md"); return; }
+    const text = dt.getData("text");
     if (text && text.trim()) { e.preventDefault(); ingestText(text, "Pasted.md"); }
   });
 
@@ -349,7 +407,13 @@
   window.addEventListener("dragenter", (e) => { e.preventDefault(); dragDepth++; document.body.classList.add("dragging"); $("drop").classList.add("over"); });
   window.addEventListener("dragover", (e) => { e.preventDefault(); });
   window.addEventListener("dragleave", (e) => { e.preventDefault(); dragDepth--; if (dragDepth <= 0) { dragDepth = 0; document.body.classList.remove("dragging"); $("drop").classList.remove("over"); } });
-  window.addEventListener("drop", async (e) => { e.preventDefault(); dragDepth = 0; document.body.classList.remove("dragging"); $("drop").classList.remove("over"); ingest(await filesFromDrop(e.dataTransfer)); });
+  window.addEventListener("drop", async (e) => {
+    e.preventDefault(); dragDepth = 0; document.body.classList.remove("dragging"); $("drop").classList.remove("over");
+    const dragged = htmlFlavorToMarkdown(e.dataTransfer); // e.g. a selection dragged from a browser; must read before the await — the DataTransfer empties once the handler yields
+    const files = await filesFromDrop(e.dataTransfer);
+    if (files.length) ingest(files);
+    else if (dragged) ingestText(dragged, "Dropped.md");
+  });
 
   window.addEventListener("resize", () => { clearTimeout(window._rz); closeAllPops(); window._rz = setTimeout(applyZoom, 120); });
 
