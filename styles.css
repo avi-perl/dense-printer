@@ -195,8 +195,10 @@ body.dragging #stage::after { content: "Drop markdown or HTML files, or a folder
   #docbar { padding: 8px 10px 5px; gap: 10px; }
   #docTitle { font-size: 16px; }
   .pages-ind { display: none; }
+  .doc-headings { display: none; }
   /* Docbar order: Tools first, then a lighter paste button; Share stays left of Print */
-  .tools-toggle { display: inline-flex; padding: 7px 10px; order: -2; }
+  .tools-toggle { display: inline-flex; padding: 7px 10px; order: -2; background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tools-toggle:hover { background: var(--accent-press); border-color: var(--accent-press); }
   .paste-sq { order: -1; width: auto; height: auto; padding: 7px 10px; background: #fff; border: 1px solid var(--line); box-shadow: none; color: var(--accent); }
   .paste-sq:hover { filter: none; background: #f6f7f9; }
   .paste-sq span { display: none; }
