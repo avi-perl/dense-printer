@@ -2,9 +2,9 @@
   "use strict";
 
   const DEFAULTS = {
-    font: "serif", size: 9, scale: 100, line: 1.2,
-    cols: 2, margin: 0.25, para: 0.35,
-    headings: true, justify: false, footer: true,
+    font: "micro", size: 9, scale: 100, line: 1.2,
+    cols: 3, margin: 0.25, para: 0.35,
+    headings: true, justify: true, footer: true,
     staple: false, stapleSize: 0.85,
   };
   const FONTS = {
@@ -66,6 +66,7 @@
   // localStorage, so a generated link can't clobber a person's saved
   // document or settings.
   let hashDriven = false;
+  let autoFillPending = false;
   (function readHash() {
     if (location.hash.length < 2) return;
     const p = new URLSearchParams(location.hash.slice(1));
@@ -94,6 +95,8 @@
       const v = p.get(k);
       if (v != null) settings[k] = v === "1" || v === "true";
     });
+    const af = p.get("autofill");
+    if (af === "1" || af === "true") autoFillPending = true;
   })();
 
   const $ = (id) => document.getElementById(id);
@@ -207,11 +210,44 @@
     applyZoom();
   }
 
+  // ---------- Auto fill ----------
+  // Grow the type until any bigger would spill onto another page: first the
+  // font size (0.5pt grid), then the squeeze scale (1% grid) to fine-tune.
+  // Each trial repaginates synchronously, so binary search keeps it cheap and
+  // the browser only paints the final state.
+  function autoFill() {
+    if (!doc.markdown.trim()) return;
+    repaginate();
+    const target = pagesEl.children.length;
+    function grow(key, hi, step) {
+      const lo = settings[key];
+      let best = lo;
+      let a = 1, b = Math.round((hi - lo) / step);
+      while (a <= b) {
+        const m = (a + b) >> 1;
+        settings[key] = lo + m * step;
+        repaginate();
+        if (pagesEl.children.length <= target) { best = settings[key]; a = m + 1; }
+        else { b = m - 1; }
+      }
+      settings[key] = best;
+      repaginate();
+    }
+    grow("size", 24, 0.5);
+    grow("scale", 120, 1);
+    save(); syncUI();
+  }
+
   // ---------- Zoom ----------
+  const MOBILE_MQ = window.matchMedia("(max-width: 720px)");
   function applyZoom() {
-    const pageH = 11 * 96;
+    const pageH = 11 * 96, pageW = 8.5 * 96;
     let z;
-    if (zoom === "fit") { z = Math.min(1, (stageEl.clientHeight - 78) / pageH); }
+    if (zoom === "fit") {
+      z = Math.min(1, (stageEl.clientHeight - 78) / pageH);
+      // on phones, fit the page width too so the sheet isn't cropped
+      if (MOBILE_MQ.matches) z = Math.min(z, (stageEl.clientWidth - 24) / pageW);
+    }
     else { z = parseFloat(zoom) / 100; }
     pagesEl.style.transform = "scale(" + z + ")";
     scalerEl.style.width = (pagesEl.offsetWidth * z) + "px";
@@ -251,8 +287,11 @@
     document.querySelectorAll("[data-pop].active").forEach((t) => t.classList.remove("active"));
   }
   function placePopup(trigger, pop) {
+    if (MOBILE_MQ.matches) { pop.style.top = ""; pop.style.left = ""; return; } // mobile: CSS turns the popup into a full drawer panel
     const r = trigger.getBoundingClientRect();
-    pop.style.top = Math.round(r.bottom + 5) + "px";
+    let top = Math.round(r.bottom + 5);
+    top = Math.max(8, Math.min(top, window.innerHeight - pop.offsetHeight - 8)); // keep tall popups on-screen (drawer triggers can sit low)
+    pop.style.top = top + "px";
     let left = pop.classList.contains("right") ? (r.right - pop.offsetWidth) : r.left;
     left = Math.max(8, Math.min(left, window.innerWidth - pop.offsetWidth - 8));
     pop.style.left = Math.round(left) + "px";
@@ -267,8 +306,32 @@
     });
   });
   document.querySelectorAll(".popup").forEach((p) => p.addEventListener("click", (e) => e.stopPropagation()));
+  // Mobile sub-menu back buttons: return to the main drawer without closing it
+  document.querySelectorAll(".popup").forEach((pop) => {
+    const trigger = document.querySelector('[data-pop="' + pop.id + '"]');
+    const back = document.createElement("button");
+    back.type = "button";
+    back.className = "pop-back";
+    back.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg><span>' + ((trigger && trigger.title) || "Back") + "</span>";
+    back.addEventListener("click", (e) => { e.stopPropagation(); closeAllPops(); });
+    pop.insertBefore(back, pop.firstChild);
+  });
   document.addEventListener("click", closeAllPops);
   stageEl.addEventListener("scroll", closeAllPops, { passive: true });
+
+  // ---------- Mobile tools drawer ----------
+  // On small screens the toolbar kicks out from the right; same element, same
+  // controls, so every binding above works unchanged.
+  function setTools(open) { document.body.classList.toggle("tools-open", open); if (!open) closeAllPops(); }
+  $("btnTools").addEventListener("click", (e) => { e.stopPropagation(); setTools(!document.body.classList.contains("tools-open")); });
+  $("tbClose").addEventListener("click", () => setTools(false));
+  $("tbScrim").addEventListener("click", () => setTools(false));
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (document.querySelector(".popup.open")) closeAllPops(); // step back to the main menu first
+    else setTools(false);
+  });
+  document.querySelector(".tb-inner").addEventListener("scroll", closeAllPops, { passive: true });
 
   // ---------- Actions ----------
   function setSetting(key, val) { settings[key] = val; save(); syncUI(); scheduleLayout(); }
@@ -280,6 +343,7 @@
       case "folder": $("folderInput").click(); break;
       case "paste": openPaste(); break;
       case "sample": loadSample(); break;
+      case "autofill": autoFill(); break;
       case "clear": doc = { markdown: "", names: [] }; save(); refreshSource(); repaginate(); break;
       case "print": window.print(); break;
       case "setup": openPop("pop-setup"); break;
@@ -478,7 +542,16 @@
   }
 
   // ---------- Boot ----------
-  function boot() { syncUI(); refreshSource(); repaginate(); }
+  function boot() {
+    syncUI(); refreshSource(); repaginate();
+    // Web fonts change metrics after first layout; repaginate once they land,
+    // and only then run a URL-requested auto fill so it measures real glyphs.
+    const fonts = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+    fonts.then(() => {
+      repaginate();
+      if (autoFillPending) { autoFillPending = false; autoFill(); }
+    });
+  }
   if (window.marked) boot();
   else { const t = setInterval(() => { if (window.marked) { clearInterval(t); boot(); } }, 60); setTimeout(() => clearInterval(t), 4000); }
 })();

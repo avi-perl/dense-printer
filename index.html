@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!--
+  Dense Printer — packs markdown (or HTML) onto as few printed 8.5x11in pages
+  as possible: multi-column layout, small-but-legible type, trimmed margins.
+  Use it when someone wants notes, docs, or reference material printed compactly.
+
+  AI agents: this app is JS-rendered — don't parse this page. Everything can be
+  driven from a single URL. Read
+  https://avi-perl.github.io/dense-printer/llms.txt
+  for the URL API (#md=<base64> or #html=<base64>, plus size/cols/font/autofill
+  and other settings) and copy-paste headless print-to-PDF recipes.
+-->
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Markdown Page Printer</title>
@@ -23,6 +34,10 @@
     </div>
     <div class="docbar-spacer"></div>
     <span class="pages-ind" id="pagesInd"></span>
+    <button class="btn tools-toggle" id="btnTools" aria-label="Editing tools">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/><path d="M2 14h4M10 8h4M18 16h4"/></svg>
+      Tools
+    </button>
     <button class="btn print" id="btnPrint">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
       Print / PDF
@@ -31,6 +46,10 @@
 
   <!-- ============ Toolbar ============ -->
   <div id="toolbar">
+    <div class="tb-head">
+      <span>Tools</span>
+      <button id="tbClose" aria-label="Close tools">×</button>
+    </div>
     <div class="tb-inner">
       <!-- Open -->
       <div class="pop-wrap">
@@ -44,6 +63,7 @@
           <button class="menu-item" data-act="folder"><span class="chk"></span>Open folder…</button>
           <button class="menu-item" data-act="paste"><span class="chk"></span>Paste markdown…<span class="mi-r">⌘V</span></button>
           <button class="menu-item" data-act="sample"><span class="chk"></span>Load sample</button>
+          <a class="menu-item" href="test.html"><span class="chk"></span>Font &amp; size test sheet</a>
           <div class="menu-sep"></div>
           <button class="menu-item" data-act="clear"><span class="chk"></span>Clear document</button>
         </div>
@@ -54,7 +74,7 @@
       <!-- Font -->
       <div class="pop-wrap">
         <button class="tb-btn dd font" data-pop="dd-font" title="Font">
-          <span class="lab" id="fontLab">Serif</span>
+          <span class="lab" id="fontLab">Micro</span>
           <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg>
         </button>
         <div class="popup" id="dd-font">
@@ -73,6 +93,11 @@
         <span class="val" id="sizeVal">9</span>
         <button id="sizePlus" aria-label="Larger">+</button>
       </div>
+
+      <button class="tb-btn cta" data-act="autofill" title="Auto fill — grow the type until any bigger would add a page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/><path d="M9 12h6"/><path d="M12 9v6"/></svg>
+        <span>Auto fill</span>
+      </button>
 
       <div class="tb-sep"></div>
 
@@ -98,8 +123,8 @@
       <!-- Columns -->
       <div class="seg" id="segCols" title="Columns">
         <button data-v="1">1</button>
-        <button data-v="2" class="on">2</button>
-        <button data-v="3">3</button>
+        <button data-v="2">2</button>
+        <button data-v="3" class="on">3</button>
         <button data-v="4">4</button>
       </div>
 
@@ -110,7 +135,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 4v16M18 4v16M6 12h12"/></svg>
         <span>Headings</span>
       </button>
-      <button class="tb-btn tg" data-tg="justify" title="Justify &amp; hyphenate">
+      <button class="tb-btn tg on" data-tg="justify" title="Justify &amp; hyphenate">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
         <span>Justify</span>
       </button>
@@ -178,6 +203,8 @@
       </div>
     </div>
   </div>
+
+  <div id="tbScrim"></div>
 
   <!-- ============ Stage ============ -->
   <div id="stage">

@@ -1,86 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!--
+  Dense Printer font & size test sheet — a one-page printable specimen of all
+  four app fonts at 12pt down to 3pt. Print it once, read it on paper, and the
+  smallest comfortable row is your minimum size. App + URL API details:
+  https://avi-perl.github.io/dense-printer/llms.txt
+-->
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Font &amp; Size Test Sheet — Markdown Page Printer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&family=Amiko:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
 <style>
-  :root {
-    --ui-font: "Segoe UI", Roboto, -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
-    --accent: #1a73e8;
-    --ink: #202124;
-    --muted: #5f6368;
-    --line: #e3e3e5;
-    --canvas: #e9eaed;
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; font-family: var(--ui-font); color: var(--ink); background: var(--canvas); }
+  /* Test-sheet specifics only — chrome, page, and buttons come from styles.css */
+  #docbar { border-bottom: 1px solid var(--line); }
+  .back { font-size: 13px; color: var(--accent); text-decoration: none; white-space: nowrap; }
+  .back:hover { text-decoration: underline; }
 
-  header {
-    background: #fff; padding: 12px 20px; display: flex; align-items: center; gap: 14px;
-    border-bottom: 1px solid var(--line);
-  }
-  header h1 { font-size: 18px; font-weight: 400; margin: 0; flex: 1; }
-  header a.back { font-size: 13px; color: var(--accent); text-decoration: none; }
-  header a.back:hover { text-decoration: underline; }
-  .btn {
-    font-family: inherit; font-size: 13px; cursor: pointer; border: 1px solid var(--accent);
-    background: var(--accent); color: #fff; border-radius: 8px; padding: 7px 14px; font-weight: 500;
-    box-shadow: 0 1px 2px rgba(26,115,232,.35);
-  }
-  .btn:hover { background: #1b66c9; }
-
-  .sheet {
-    max-width: 8.5in; margin: 18px auto; background: #fff; padding: 0.5in;
-    box-shadow: 0 1px 4px rgba(0,0,0,.18);
-  }
-  .intro { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0 0 18px; }
+  .intro { column-span: all; font-size: 8.5pt; font-family: var(--ui-font); color: var(--muted); line-height: 1.45; margin: 0 0 10px; }
   .intro strong { color: var(--ink); }
 
-  .font-section { break-inside: avoid-column; margin-bottom: 22px; }
-  .font-section h2 {
-    font-size: 13px; font-weight: 600; margin: 0 0 2px; color: var(--ink);
-    border-bottom: 2px solid var(--ink); padding-bottom: 3px;
-  }
-  .font-section .sub { font-size: 11px; color: var(--muted); margin: 3px 0 8px; }
-
-  .row { display: flex; gap: 8px; align-items: baseline; padding: 3px 0; border-bottom: 1px dotted #eceef0; break-inside: avoid; }
-  .row .pt {
-    flex: 0 0 34px; font-size: 10px; color: var(--muted); font-variant-numeric: tabular-nums;
-    text-align: right; font-family: var(--ui-font);
-  }
+  .font-section { break-inside: avoid-column; margin-bottom: 14px; }
+  .font-section h2 { font-size: 10pt; font-weight: 600; margin: 0 0 6px; padding-bottom: 3px; border-bottom: 2px solid var(--ink); font-family: var(--ui-font); letter-spacing: 0; }
+  .row { display: flex; gap: 7px; align-items: baseline; padding: 2px 0; border-bottom: 1px dotted #eceef0; break-inside: avoid; }
+  .row .pt { flex: 0 0 30px; font-size: 7.5pt; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; font-family: var(--ui-font); }
   .row .sample { flex: 1; line-height: 1.2; }
-
-  .cols2 { column-count: 2; column-gap: 0.4in; }
-
-  @media print {
-    @page { size: letter; margin: 0.4in; }
-    body { background: #fff; }
-    header { display: none; }
-    .sheet { max-width: none; margin: 0; padding: 0; box-shadow: none; }
-    .intro { margin-bottom: 12px; }
-  }
 </style>
 </head>
 <body>
+<div id="app">
 
-<header>
-  <h1>Font &amp; size test sheet</h1>
-  <a class="back" href="index.html">&larr; Back to the printer</a>
-  <button class="btn" onclick="window.print()">Print this sheet</button>
-</header>
+  <header id="docbar">
+    <div class="doc-icon"></div>
+    <div class="doc-headings">
+      <div id="docTitle">Font &amp; size test sheet</div>
+    </div>
+    <div class="docbar-spacer"></div>
+    <a class="back" href="index.html">&larr; Back to the printer</a>
+    <button class="btn print" onclick="window.print()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
+      Print this sheet
+    </button>
+  </header>
 
-<div class="sheet">
-  <p class="intro">
-    <strong>Print this page</strong> (at 100% scale, no "fit to page"), then read down each column on paper.
-    The smallest row you can still read comfortably is your minimum — set that <strong>font</strong> and
-    <strong>size</strong> in the printer's toolbar. Samples use the app's default 1.2 line spacing.
-    On-screen size is not a reliable guide; paper is the real test.
-  </p>
-  <div class="cols2" id="specimens"></div>
+  <div id="stage">
+    <div id="pagesScaler"><div id="pages" style="--margin:0.4in; --cols:2; --line-height:1.2; --para-gap:0.35em; --base-font:12px; --doc-font:var(--ui-font); --staple-size:0in;">
+      <div class="page"><div class="page-content" id="specimens">
+        <p class="intro">
+          <strong>Print this sheet</strong> (100% scale, no &ldquo;fit to page&rdquo;), then read down each font on paper.
+          The smallest row you can still read comfortably is your minimum &mdash; pick that <strong>font</strong> and
+          <strong>size</strong> in the printer&rsquo;s toolbar. Samples use the app&rsquo;s default 1.2 line spacing.
+          On-screen size is not a reliable guide; paper is the real test.
+        </p>
+      </div></div>
+    </div></div>
+  </div>
 </div>
 
 <script>
@@ -92,7 +69,7 @@
     { label: "Micro — Amiko", stack: "'Amiko', 'Helvetica Neue', Arial, sans-serif" },
   ];
   var SIZES = [12, 11, 10, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3];
-  var SAMPLE = "Sphinx of black quartz, judge my vow — 0123456789. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
+  var SAMPLE = "Sphinx of black quartz, judge my vow — 0123456789.";
 
   var root = document.getElementById("specimens");
   FONTS.forEach(function (f) {
@@ -100,11 +77,7 @@
     sec.className = "font-section";
     var h = document.createElement("h2");
     h.textContent = f.label;
-    var sub = document.createElement("p");
-    sub.className = "sub";
-    sub.textContent = "Pick this in the Font menu, then set the size below.";
     sec.appendChild(h);
-    sec.appendChild(sub);
     SIZES.forEach(function (pt) {
       var row = document.createElement("div");
       row.className = "row";
@@ -122,6 +95,18 @@
     });
     root.appendChild(sec);
   });
+
+  // fit the sheet to the window (screen only; print CSS resets the transform)
+  var pages = document.getElementById("pages"), scaler = document.getElementById("pagesScaler"), stage = document.getElementById("stage");
+  function fit() {
+    var z = Math.min(1, (stage.clientWidth - 24) / pages.offsetWidth);
+    pages.style.transform = "scale(" + z + ")";
+    scaler.style.width = pages.offsetWidth * z + "px";
+    scaler.style.height = pages.offsetHeight * z + "px";
+  }
+  fit();
+  window.addEventListener("resize", fit);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
 })();
 </script>
 </body>

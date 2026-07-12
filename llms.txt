@@ -26,18 +26,46 @@ client-side) and nothing is persisted.
   or HTML fragment and don't want to convert it yourself.
 - `name`: document title shown in the footer area. Default `Linked.md`.
 - `size`: font size in points, 3-24. Default 9.
-- `cols`: columns per page, 1-4. Default 2.
+- `cols`: columns per page, 1-4. Default 3.
 - `line`: line height, 1-1.8. Default 1.2.
 - `margin`: page margins in inches, 0.1-1. Default 0.25.
 - `para`: paragraph spacing in em, 0-1. Default 0.35.
 - `scale`: overall squeeze percentage, 25-120. Default 100.
-- `font`: `serif` | `sans` | `compact` | `micro`. Default `serif`.
+- `font`: `serif` | `sans` | `compact` | `micro`. Default `micro`.
   `compact` and `micro` fit the most text; `micro` stays legible at tiny sizes.
 - `headings`, `justify`, `footer`, `staple`: `1` or `0`. Defaults: headings=1,
-  justify=0, footer=1, staple=0. `staple` reserves a clear strip for a staple.
+  justify=1, footer=1, staple=0. `staple` reserves a clear strip for a staple.
+- `autofill`: `1` to auto-maximize the type after load — grows the font size
+  (then the squeeze scale) until any bigger would add a page, so a half-empty
+  last page gets absorbed into larger, more readable type. Runs after web
+  fonts load; starts from whatever `size`/`scale` you passed. Also available
+  interactively as the "Auto fill" toolbar button.
 
 A dense starting point for maximum text per sheet:
 `size=7&cols=3&line=1.1&margin=0.15&font=compact&justify=1`
+Add `&autofill=1` to grow the type back up to exactly fill the page count.
+
+## Font & size test sheet
+
+    https://avi-perl.github.io/dense-printer/test.html
+
+A one-page printable specimen: all four fonts (serif, sans, compact, micro)
+at sizes from 12pt down to 3pt, at the app's default 1.2 line spacing. Its
+purpose: on-paper legibility can't be judged from a screen, so the person
+prints this sheet once, reads down each font, and the smallest row they can
+still read comfortably is their personal minimum.
+
+How to help a person choose a size:
+- If they haven't calibrated, suggest printing the test sheet first (open the
+  URL and print, or use the headless recipe below on this page). Ask them for
+  the smallest (font, size) pair they found comfortable, then use it in every
+  Dense Printer link you generate for them.
+- Reasonable priors while uncalibrated: 9-10pt serif/sans reads like a normal
+  document; 7-8pt compact suits dense reference material; micro is designed
+  for tiny sizes and most people still read it at 5-6pt. Eyesight, printer
+  quality, and paper vary — the sheet beats any guess.
+- Remember their answer across sessions if you can; it's a stable personal
+  constant worth reusing.
 
 ## Getting a PDF without a visible browser
 
@@ -57,7 +85,7 @@ Playwright:
     await page.goto(`https://avi-perl.github.io/dense-printer/#md=${md}&size=8&cols=3`);
     await page.waitForSelector("#pages .page");
     await page.evaluate(() => document.fonts.ready);
-    await page.waitForTimeout(200); // pagination debounce
+    await page.waitForTimeout(200); // pagination debounce (use ~500ms with autofill=1)
     await page.pdf({ path: "out.pdf", format: "Letter", printBackground: true, preferCSSPageSize: true });
 
 Notes:
